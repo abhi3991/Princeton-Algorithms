@@ -22,6 +22,36 @@ public class Deque<Item> implements Iterable<Item> {
     }
 
     /**
+     * unit testing (optional)
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
+
+        final Deque<String> myQueue = new Deque<>();
+        myQueue.addFirst("your");
+        myQueue.addFirst("is");
+        myQueue.addLast("code");
+        myQueue.addLast("working");
+        myQueue.addLast("fine ??");
+
+        for (final String x : myQueue) {
+            System.out.print(x + " ");
+        }
+
+        System.out.println("\nTested adding!! ========= testing removing!!");
+
+        myQueue.removeFirst();
+        myQueue.removeFirst();
+        myQueue.removeLast();
+
+        for (final String x : myQueue) {
+            System.out.print(x + " ");
+        }
+
+    }
+
+    /**
      * return an iterator over items in order from front to end
      *
      * @return
@@ -29,33 +59,6 @@ public class Deque<Item> implements Iterable<Item> {
     @Override
     public Iterator<Item> iterator() {
         return new CustomIterator<>();
-    }
-
-    private class CustomIterator<Item> implements Iterator<Item> {
-
-        private Node current = first;
-
-        @Override
-        public boolean hasNext() {
-            return current != null;
-        }
-
-        @Override
-        public Item next() {
-            final Item item = (Item) current.item;
-            current = current.next;
-            return item;
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException("unsupported operation!!");
-        }
-    }
-
-    private class Node {
-        private Item item;
-        private Node next;
-        private Node prev;
     }
 
     /**
@@ -105,7 +108,6 @@ public class Deque<Item> implements Iterable<Item> {
             return;
         }
     }
-
 
     /**
      * add the item to the end
@@ -187,34 +189,34 @@ public class Deque<Item> implements Iterable<Item> {
         }
     }
 
-    /**
-     * unit testing (optional)
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
+    private class CustomIterator<Item> implements Iterator<Item> {
 
-        final Deque<String> myQueue = new Deque<>();
-        myQueue.addFirst("your");
-        myQueue.addFirst("is");
-        myQueue.addLast("code");
-        myQueue.addLast("working");
-        myQueue.addLast("fine ??");
+        private Node current = first;
 
-        for (final String x : myQueue) {
-            System.out.print(x + " ");
+        @Override
+        public boolean hasNext() {
+            return current != null;
         }
 
-        System.out.println("\nTested adding!! ========= testing removing!!");
-
-        myQueue.removeFirst();
-        myQueue.removeFirst();
-        myQueue.removeLast();
-
-        for (final String x : myQueue) {
-            System.out.print(x + " ");
+        @Override
+        public Item next() {
+            if (current == null) {
+                throw new NoSuchElementException("Iterator has no other elements!!");
+            }
+            final Item item = (Item) current.item;
+            current = current.next;
+            return item;
         }
 
+        public void remove() {
+            throw new UnsupportedOperationException("unsupported operation!!");
+        }
+    }
+
+    private class Node {
+        private Item item;
+        private Node next;
+        private Node prev;
     }
 
 }
