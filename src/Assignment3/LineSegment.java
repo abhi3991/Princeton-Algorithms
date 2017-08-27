@@ -62,12 +62,5 @@ public class LineSegment {
     public int hashCode() {
         throw new UnsupportedOperationException();
     }
-
-    public boolean equals(LineSegment o) {
-        if (o.p.compareTo(this.p) == 0 && o.q.compareTo(this.q) == 0)
-            return true;
-        else
-            return false;
-    }
 }
 

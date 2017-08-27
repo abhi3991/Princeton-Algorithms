@@ -13,11 +13,21 @@ public class BruteCollinearPoints {
      * @param points
      */
     public BruteCollinearPoints(Point[] points) {
+        Arrays.sort(points);
         if (points == null)
-            throw new IllegalArgumentException("points array cannot be null!!");
-        for (int i =0; i < points.length ; i++){
-            if (points[i] == null)
-                throw new IllegalArgumentException("Points in the array cannot be null!");
+            throw new IllegalArgumentException("Points array cannot be null !!");
+
+        for (int i = 0; i < points.length; i++) {
+            if (points[i] == null) {
+                throw new IllegalArgumentException("Points inside the array cannot be null");
+            }
+        }
+
+        Arrays.sort(points);
+        for (int i = 0; i < points.length - 1; i++) {
+            if (points[i + 1].compareTo(points[i]) == 0) {
+                throw new IllegalArgumentException("points inside the array should not have duplicates");
+            }
         }
         this.lineSegmentCount = 0;
         this.segments = new LineSegment[1];

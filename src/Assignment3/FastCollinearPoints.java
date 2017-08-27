@@ -1,12 +1,12 @@
 package Assignment3;
 
-import java.util.Arrays;
+import java.util.*;
 
 public class FastCollinearPoints {
 
-    //private final Map<String, LineSegment> segments;
-    private LineSegment[] segments;
-    private Point[] myPoints;
+    private final List<LineSegment> segments;
+    private final Point[] copyPoints;
+    private Map<Double, List<Point>> segmentTracker;
     private int lineSegmentCount;
 
     /**
@@ -15,10 +15,26 @@ public class FastCollinearPoints {
      * @param points
      */
     public FastCollinearPoints(Point[] points) {
+        if (points == null)
+            throw new IllegalArgumentException("Points array cannot be null !!");
+
+        this.copyPoints = new Point[points.length];
+
+        Arrays.sort(points);
+
+        // copies points and throws exceptions when a null point is found.
+        copyPoints(points, copyPoints);
+
+        for (int i = 0; i < points.length - 1; i++) {
+            if (copyPoints[i + 1].compareTo(copyPoints[i]) == 0)
+                throw new IllegalArgumentException("points inside the array should not have duplicates");
+
+        }
+
         this.lineSegmentCount = 0;
-        this.segments = new LineSegment[1];
-        this.myPoints = Arrays.copyOf(points, points.length);
-        computeSegments(points, myPoints);
+        this.segments = new ArrayList<>();
+        this.segmentTracker = new HashMap<>();
+        computeSegments(points, copyPoints);
     }
 
     /**
@@ -26,106 +42,63 @@ public class FastCollinearPoints {
      *
      * @param points
      */
-    private void computeSegments(Point[] points, Point[] myPoints) {
-        for (int i = 0; i < myPoints.length; i++) {
-            final Point presentPoint = myPoints[i];
-            //segments.add(points[i]);
-            Arrays.sort(points, presentPoint.slopeOrder());
+    private void computeSegments(Point[] points, Point[] copyPoints) {
 
-            findAndAddLineSegment(points);
-            /*
+        for (int i = 0; i < points.length - 1; i++) {
+
+            final Point current = points[i];
+
+            // since the array is already sorted no need of sorting for i = 0.
+            if (i > 0)
+                Arrays.sort(copyPoints, i, points.length);
+
+            Arrays.sort(copyPoints, i, points.length, current.slopeOrder());
+
+            int startIndex = i + 1;
+
+            double previousSlope = points[i].slopeTo(copyPoints[i + 1]);
+
             for (int j = i + 1; j < points.length; j++) {
-                System.out.println("slope between "
-                        + presentPoint.toString() + " - " + points[j].toString() + "->"
-                        + points[i].slopeTo(points[j]) + " ,");
-            }*/
+
+                final double currentSlope = current.slopeTo(copyPoints[j]);
 
 
-        }
-    }
-
-    private void findAndAddLineSegment(Point[] points) {
-
-        int startIndex = 1;
-        OuterLoop:
-        for (int i = 2; i < points.length; i++) {
-            final double currentSlope = points[0].slopeTo(points[startIndex]);
-            if (points[0].slopeTo(points[i]) == currentSlope) {
-                if (i + 1 != points.length)
-                    continue;
-                else
-                    i++;
-            }
-
-            int range = i - startIndex;
-            if (range >= 3) {
-                int copyCounter = startIndex;
-                Point[] temp = new Point[range + 1];
-                temp[0] = points[0];
-                for (int k = 1; k < temp.length; k++) {
-                    temp[k] = points[copyCounter++];
+                if (previousSlope == currentSlope) {
+                    if (j != points.length - 1)
+                        continue;
                 }
-                final Point min = findMin(temp);
-                final Point max = findMax(temp);
-                final LineSegment lineSegment = new LineSegment(min, max);
-                //System.out.println(lineSegment.toString());
-                if (lineSegmentCount == segments.length) {
-                    resize(2 * lineSegmentCount);
-                }
+                int lastIndexWithMatchedSlope = (j == points.length - 1 && previousSlope == currentSlope) ? j : j - 1;
+                if ((lastIndexWithMatchedSlope - startIndex) + 1 >= 3) {
+                    final Point startPoint = copyPoints[i];
+                    final Point endPoint = copyPoints[lastIndexWithMatchedSlope];
 
-                if (lineSegmentCount == 0) {
-                    segments[lineSegmentCount++] = lineSegment;
-                    startIndex = i;
-                    continue;
-                }
-                for (int q = 0; q < lineSegmentCount; q++) {
-                    if (segments[q].toString().equals(lineSegment.toString())) {
-                        startIndex = i;
-                        continue OuterLoop;
+                    List<Point> segmentTrackerEndPointList;
+                    if (segmentTracker.containsKey(previousSlope)) {
+                        if (!segmentTracker.get(previousSlope).contains(endPoint)) {
+                            segmentTrackerEndPointList = segmentTracker.get(previousSlope);
+                            segmentTrackerEndPointList.add(endPoint);
+                            segmentTracker.put(previousSlope, segmentTrackerEndPointList);
+                            final LineSegment lineSegment = new LineSegment(startPoint, endPoint);
+                            segments.add(lineSegment);
+                            lineSegmentCount++;
+                        }
+                    } else {
+                        segmentTrackerEndPointList = new ArrayList<>();
+                        segmentTrackerEndPointList.add(endPoint);
+                        segmentTracker.put(previousSlope, segmentTrackerEndPointList);
+                        final LineSegment lineSegment = new LineSegment(startPoint, endPoint);
+                        segments.add(lineSegment);
+                        lineSegmentCount++;
                     }
+                    startIndex = j;
+                    previousSlope = currentSlope;
+                } else {
+                    startIndex = j;
+                    previousSlope = currentSlope;
+                    continue;
                 }
-                segments[lineSegmentCount++] = lineSegment;
-
-            }
-            startIndex = i;
-        }
-
-
-//        if (p)
-//        Point[] temp = {points[p1], points[p2], points[p3], points[p4]};
-//        Point min = temp[0];
-//        Point max = temp[0];
-//        for (int i = 0; i < 3; i++) {
-//            if (min.compareTo(temp[i + 1]) > 0) {
-//                min = temp[i + 1];
-//            }
-//            if (max.compareTo(temp[i + 1]) < 0) {
-//                max = temp[i + 1];
-//            }
-//        }
-
-//        final LineSegment lineSegment = new LineSegment(min, max);
-//        return lineSegment;
-    }
-
-    private Point findMin(Point[] temp) {
-        Point min = temp[0];
-        for (int i = 1; i < temp.length; i++) {
-            if (min.compareTo(temp[i]) > 0) {
-                min = temp[i];
             }
         }
-        return min;
-    }
-
-    private Point findMax(Point[] temp) {
-        Point max = temp[0];
-        for (int i = 1; i < temp.length; i++) {
-            if (max.compareTo(temp[i]) < 0) {
-                max = temp[i];
-            }
-        }
-        return max;
     }
 
 
@@ -144,15 +117,48 @@ public class FastCollinearPoints {
      * @return
      */
     public LineSegment[] segments() {
-        return Arrays.copyOfRange(this.segments, 0, lineSegmentCount);
+        return segments.toArray(new LineSegment[segments.size()]);
     }
 
-    private void resize(int capacity) {
-        final LineSegment[] copyItems = new LineSegment[capacity];
+    /**
+     * Helper method to copy points
+     * @param points
+     * @param copyPoints
+     */
+    private void copyPoints(final Point[] points, final Point[] copyPoints){
 
-        for (int i = 0; i < lineSegmentCount; i++) {
-            copyItems[i] = segments[i];
+        for (int i = 0; i < points.length; i++) {
+            if (points[i] != null) {
+                copyPoints[i] = points[i];
+            } else {
+                throw new IllegalArgumentException("Points inside the array cannot be null!!");
+            }
         }
-        this.segments = copyItems;
     }
+
+    private void printPoints(final Point[] points) {
+        for (Point p : points) {
+            System.out.print(p.toString() + ", ");
+        }
+    }
+
+    private void printPoints(final Point[] points, int i) {
+        for (int j = 0; j <= i; j++) {
+            System.out.print(points[j].toString() + ", ");
+        }
+
+        for (int j = i + 1; j < points.length; j++) {
+            System.out.print(points[j].toString() + ", ");
+        }
+
+    }
+
+    private void printPointsWithSlope(final Point[] points) {
+        System.out.println();
+        for (int i = 1; i < points.length; i++) {
+            System.out.println("slope: " + points[0].toString() + " - " + points[i].toString() + "->"
+                    + points[0].slopeTo(points[i]));
+        }
+    }
+
 }
